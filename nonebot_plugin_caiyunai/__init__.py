@@ -3,14 +3,13 @@ from typing import List, Union
 from nonebot import on_command
 from nonebot.rule import to_me
 from nonebot.typing import T_State
-from nonebot.matcher import Matcher
-from nonebot.params import CommandArg, ArgPlainText, State
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
+from nonebot.adapters.cqhttp import Bot, Event, GroupMessageEvent, MessageSegment, GROUP
 from nonebot_plugin_htmlrender import text_to_pic
 
 from .data_source import CaiyunAi, model_list
 
 
+__help__plugin_name__ = 'caiyunai'
 __des__ = '彩云小梦AI续写'
 __cmd__ = '''
 @我 续写/彩云小梦 {text}
@@ -23,27 +22,28 @@ __usage__ = f'{__des__}\nUsage:\n{__cmd__}\nExample:\n{__example__}'
 
 
 novel = on_command('续写', aliases={'彩云小梦'},
-                   block=True, rule=to_me(), priority=11)
+                   block=True, rule=to_me(), permission=GROUP, priority=11)
 
 
 @novel.handle()
-async def _(matcher: Matcher, msg: Message = CommandArg()):
-    content = msg.extract_plain_text().strip()
+async def _(bot: Bot, event: Event, state: T_State):
+    content = event.get_plaintext().strip()
     if content:
-        matcher.set_arg('content', msg)
+        state['content'] = content
 
 
 @novel.got('content', prompt='请发送要续写的内容')
-async def _(matcher: Matcher, content: str = ArgPlainText(), state: T_State = State()):
-    matcher.set_arg('reply', Message(f'续写{content}'))
+async def _(bot: Bot, event: Event, state: T_State):
+    content: str = state.get('content')
+    state['reply'] = f'续写{content}'
     caiyunai = CaiyunAi()
     state['caiyunai'] = caiyunai
 
 
 @novel.got('reply')
-async def _(bot: Bot, event: GroupMessageEvent,
-            state: T_State = State(), reply: str = ArgPlainText()):
+async def _(bot: Bot, event: Event, state: T_State):
     caiyunai: CaiyunAi = state.get('caiyunai')
+    reply: str = state.get('reply')
 
     match_continue = re.fullmatch(r'续写\s*(\S+.*)', reply)
     match_select = re.fullmatch(r'选择分支\s*(\d+)', reply)
