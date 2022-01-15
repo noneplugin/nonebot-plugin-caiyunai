@@ -11,6 +11,7 @@ from nonebot_plugin_htmlrender import text_to_pic
 from .data_source import CaiyunAi, model_list
 
 
+__help__plugin_name__ = 'caiyunai'
 __des__ = '彩云小梦AI续写'
 __cmd__ = '''
 @我 续写/彩云小梦 {text}
