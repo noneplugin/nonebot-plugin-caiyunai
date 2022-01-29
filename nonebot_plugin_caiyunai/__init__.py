@@ -46,9 +46,9 @@ async def _(bot: Bot, event: GroupMessageEvent,
             state: T_State = State(), reply: str = ArgPlainText()):
     caiyunai: CaiyunAi = state.get('caiyunai')
 
-    match_continue = re.fullmatch(r'续写\s*(\S+.*)', reply)
-    match_select = re.fullmatch(r'选择分支\s*(\d+)', reply)
-    match_model = re.fullmatch(r'切换模型\s*(\S+)', reply)
+    match_continue = re.match(r'续写\s*(\S+.*)', reply, re.S)
+    match_select = re.match(r'选择分支\s*(\d+)', reply)
+    match_model = re.match(r'切换模型\s*(\S+)', reply)
 
     if match_model:
         model = match_model.group(1).strip()
