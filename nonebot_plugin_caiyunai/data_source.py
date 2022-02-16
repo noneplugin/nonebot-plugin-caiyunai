@@ -79,7 +79,7 @@ class CaiyunAi:
         self.content = self.contents[num]
 
     async def novel_save(self):
-        url = f'http://if.caiyunai.com/v2/novel/{self.token}/novel_save'
+        url = f'https://if.caiyunai.com/v2/novel/{self.token}/novel_save'
         params = {
             'content': self.content,
             'title': '',
@@ -93,7 +93,7 @@ class CaiyunAi:
         self.nodeids = [self.nodeid]
 
     async def add_node(self):
-        url = f'http://if.caiyunai.com/v2/novel/{self.token}/add_node'
+        url = f'https://if.caiyunai.com/v2/novel/{self.token}/add_node'
         params = {
             'nodeids': self.nodeids,
             'choose': self.nodeid,
@@ -106,7 +106,7 @@ class CaiyunAi:
         self.result += self.content
 
     async def novel_ai(self) -> List[dict]:
-        url = f'http://if.caiyunai.com/v2/novel/{self.token}/novel_ai'
+        url = f'https://if.caiyunai.com/v2/novel/{self.token}/novel_ai'
         params = {
             'nid': self.nid,
             'content': self.content,
