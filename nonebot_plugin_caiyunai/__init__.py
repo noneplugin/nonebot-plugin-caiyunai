@@ -1,29 +1,34 @@
 import re
 from typing import List, Union
-from nonebot import on_command
 from nonebot.rule import to_me
 from nonebot.typing import T_State
 from nonebot.matcher import Matcher
+from nonebot import on_command, require
+from nonebot.plugin import PluginMetadata
 from nonebot.params import CommandArg, ArgPlainText, State
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
-from nonebot_plugin_htmlrender import text_to_pic
 
+require("nonebot_plugin_imageutils")
+from nonebot_plugin_imageutils import text2image, BuildImage
+
+from .config import Config
 from .data_source import CaiyunAi, model_list
 
+__plugin_meta__ = PluginMetadata(
+    name="彩云小梦",
+    description="彩云小梦AI续写",
+    usage="@我 续写 xxx",
+    config=Config,
+    extra={
+        "unique_name": "caiyunai",
+        "example": "@小Q 续写 小Q是什么",
+        "author": "meetwq <meetwq@gmail.com>",
+        "version": "0.2.3",
+    },
+)
 
-__help__plugin_name__ = "caiyunai"
-__des__ = "彩云小梦AI续写"
-__cmd__ = """
-@我 续写/彩云小梦 {text}
-""".strip()
-__short_cmd__ = "@我 续写 xxx"
-__example__ = """
-@小Q 续写 小Q是什么
-""".strip()
-__usage__ = f"{__des__}\nUsage:\n{__cmd__}\nExample:\n{__example__}"
 
-
-novel = on_command("续写", aliases={"彩云小梦"}, block=True, rule=to_me(), priority=11)
+novel = on_command("续写", aliases={"彩云小梦"}, block=True, rule=to_me(), priority=12)
 
 
 @novel.handle()
@@ -81,7 +86,7 @@ async def _(
     nickname = model_list[caiyunai.model]["name"]
     help_msg = "发送“选择分支 编号”选择分支\n发送“续写 内容”手动添加内容\n发送“切换模型 名称”切换模型"
     msgs.append(help_msg)
-    result = await text_to_pic(caiyunai.result)
+    result = BuildImage(text2image(caiyunai.result, max_width=800)).save_jpg()
     msgs.append(MessageSegment.image(result))
     for i, content in enumerate(caiyunai.contents, start=1):
         msgs.append(f"{i}、\n{content}")
