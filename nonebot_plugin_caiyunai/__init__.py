@@ -6,7 +6,13 @@ from nonebot.matcher import Matcher
 from nonebot import on_command, require
 from nonebot.plugin import PluginMetadata
 from nonebot.params import CommandArg, ArgPlainText, State
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
+from nonebot.adapters.onebot.v11 import (
+    Bot,
+    MessageEvent,
+    GroupMessageEvent,
+    Message,
+    MessageSegment,
+)
 
 require("nonebot_plugin_imageutils")
 from nonebot_plugin_imageutils import text2image, BuildImage
@@ -23,7 +29,7 @@ __plugin_meta__ = PluginMetadata(
         "unique_name": "caiyunai",
         "example": "@小Q 续写 小Q是什么",
         "author": "meetwq <meetwq@gmail.com>",
-        "version": "0.2.3",
+        "version": "0.2.4",
     },
 )
 
@@ -48,7 +54,7 @@ async def _(matcher: Matcher, content: str = ArgPlainText(), state: T_State = St
 @novel.got("reply")
 async def _(
     bot: Bot,
-    event: GroupMessageEvent,
+    event: MessageEvent,
     state: T_State = State(),
     reply: str = ArgPlainText(),
 ):
@@ -57,11 +63,12 @@ async def _(
     match_continue = re.match(r"续写\s*(\S+.*)", reply, re.S)
     match_select = re.match(r"选择分支\s*(\d+)", reply)
     match_model = re.match(r"切换模型\s*(\S+)", reply)
+    match_stop = re.match(r"结束|停|stop", reply)
 
+    model_help = f"支持的模型：{'、'.join(list(model_list))}"
     if match_model:
         model = match_model.group(1).strip()
         if model not in model_list:
-            model_help = f"支持的模型：{'、'.join(list(model_list))}\n发送“切换模型 名称”切换模型"
             await novel.reject(model_help)
         else:
             caiyunai.model = model
@@ -74,8 +81,10 @@ async def _(
         if num < 1 or num > len(caiyunai.contents):
             await novel.reject("请发送正确的编号")
         caiyunai.select(num - 1)
-    else:
+    elif match_stop:
         await novel.finish("续写已结束")
+    else:
+        await novel.reject()
 
     await novel.send("loading...")
     err_msg = await caiyunai.next()
@@ -84,22 +93,30 @@ async def _(
 
     msgs = []
     nickname = model_list[caiyunai.model]["name"]
-    help_msg = "发送“选择分支 编号”选择分支\n发送“续写 内容”手动添加内容\n发送“切换模型 名称”切换模型"
+    help_msg = (
+        "发送“选择分支 编号”选择分支\n"
+        "发送“续写 内容”手动添加内容\n"
+        "发送“切换模型 名称”切换模型\n"
+        f"{model_help}\n"
+        "发送“结束”结束续写"
+    )
     msgs.append(help_msg)
-    result = BuildImage(text2image(caiyunai.result, max_width=800)).save_jpg()
+    result = BuildImage(
+        text2image(caiyunai.result, padding=(20, 20), max_width=800)
+    ).save_jpg()
     msgs.append(MessageSegment.image(result))
     for i, content in enumerate(caiyunai.contents, start=1):
         msgs.append(f"{i}、\n{content}")
     try:
         await send_forward_msg(bot, event, nickname, bot.self_id, msgs)
     except:
-        await novel.finish("消息发送失败")
+        await novel.finish("消息发送失败，续写结束")
     await novel.reject()
 
 
 async def send_forward_msg(
     bot: Bot,
-    event: GroupMessageEvent,
+    event: MessageEvent,
     name: str,
     uin: str,
     msgs: List[Union[str, MessageSegment]],
@@ -108,6 +125,11 @@ async def send_forward_msg(
         return {"type": "node", "data": {"name": name, "uin": uin, "content": msg}}
 
     messages = [to_json(msg) for msg in msgs]
-    await bot.call_api(
-        "send_group_forward_msg", group_id=event.group_id, messages=messages
-    )
+    if isinstance(event, GroupMessageEvent):
+        await bot.call_api(
+            "send_group_forward_msg", group_id=event.group_id, messages=messages
+        )
+    else:
+        await bot.call_api(
+            "send_private_forward_msg", user_id=event.user_id, messages=messages
+        )
