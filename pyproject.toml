@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_caiyunai"
-version = "0.2.4"
+version = "0.2.5"
 description = "适用于 Nonebot2 的彩云小梦AI续写插件"
 authors = ["meetwq <meetwq@gmail.com>"]
 license = "MIT"
@@ -9,7 +9,7 @@ homepage = "https://github.com/noneplugin/nonebot-plugin-caiyunai"
 repository = "https://github.com/noneplugin/nonebot-plugin-caiyunai"
 
 [tool.poetry.dependencies]
-python = "^3.7.3"
+python = "^3.8"
 httpx = ">=0.19.0"
 nonebot2 = "^2.0.0-beta.4"
 nonebot-adapter-onebot = "^2.0.0-beta.1"

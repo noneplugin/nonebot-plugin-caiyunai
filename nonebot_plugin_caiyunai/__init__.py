@@ -5,7 +5,7 @@ from nonebot.typing import T_State
 from nonebot.matcher import Matcher
 from nonebot import on_command, require
 from nonebot.plugin import PluginMetadata
-from nonebot.params import CommandArg, ArgPlainText, State
+from nonebot.params import CommandArg, ArgPlainText
 from nonebot.adapters.onebot.v11 import (
     Bot,
     MessageEvent,
@@ -29,7 +29,7 @@ __plugin_meta__ = PluginMetadata(
         "unique_name": "caiyunai",
         "example": "@小Q 续写 小Q是什么",
         "author": "meetwq <meetwq@gmail.com>",
-        "version": "0.2.4",
+        "version": "0.2.5",
     },
 )
 
@@ -45,7 +45,7 @@ async def _(matcher: Matcher, msg: Message = CommandArg()):
 
 
 @novel.got("content", prompt="请发送要续写的内容")
-async def _(matcher: Matcher, content: str = ArgPlainText(), state: T_State = State()):
+async def _(matcher: Matcher, state: T_State, content: str = ArgPlainText()):
     matcher.set_arg("reply", Message(f"续写{content}"))
     caiyunai = CaiyunAi()
     state["caiyunai"] = caiyunai
@@ -55,7 +55,7 @@ async def _(matcher: Matcher, content: str = ArgPlainText(), state: T_State = St
 async def _(
     bot: Bot,
     event: MessageEvent,
-    state: T_State = State(),
+    state: T_State,
     reply: str = ArgPlainText(),
 ):
     caiyunai: CaiyunAi = state["caiyunai"]
